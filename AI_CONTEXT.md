@@ -128,9 +128,9 @@ Reverse engineer Splitwise, scope a realistic 3-day version, and build a working
 ### Invite Flow
 
 - Admin can directly add a person to a group by entering name and email.
-- **Hybrid Browser-SMTP Invite Flow:** 
+- **SMTP Invite Flow:** 
   - Users can be added even if they don't have a profile yet (status: `pending_account_link`).
-  - **Browser SMTP Notification:** For every added member, a personalized email is sent directly from the browser using the **SmtpJS** API (via POST) and the user's Gmail credentials. This bypasses backend rate limits.
+  - **Edge Function SMTP Notification:** For every added member, a personalized email is sent via a Supabase Edge Function using the user's Gmail credentials. This ensures reliable delivery and handles CORS issues correctly.
   - **Secondary Path:** For new users, a standard Supabase invitation is **also** triggered.
 - Duplicate entries inside the same group show a case-insensitive UI error.
 

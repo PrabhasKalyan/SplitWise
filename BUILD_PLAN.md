@@ -53,7 +53,7 @@ This plan is derived from [AI_CONTEXT.md](/Users/prabhaskalyan/splitwise/AI_CONT
 - Frontend: React + Vite
 - Backend/Auth/Database: Supabase
 - Local Storage: IndexedDB (Chat history and images)
-- Email Delivery: Browser-based SmtpJS (Gmail SMTP)
+- Email Delivery: Custom Gmail SMTP via Supabase Edge Function
 - Testing: Playwright E2E
 
 ### Database Schema
@@ -85,7 +85,7 @@ This plan is derived from [AI_CONTEXT.md](/Users/prabhaskalyan/splitwise/AI_CONT
 ### API Design
 
 - Direct Supabase table interactions for CRUD.
-- **Email Notifications:** Custom notifications are sent directly from the browser using **SmtpJS (POST)** to bypass backend rate limits. 
+- **Email Notifications:** Custom notifications are sent via a **Supabase Edge Function** using the user's Gmail SMTP configuration. This handles cross-origin issues and ensures reliable delivery.
 - **Hybrid Flow:** New users receive a custom Gmail notification plus a secondary Supabase invitation link.
 
 ### Realtime / Chat
