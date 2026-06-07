@@ -432,7 +432,7 @@ Reverse engineer Splitwise, scope a realistic 3-day version, and build a working
 
 - Target: Vercel.
 - Database: Supabase.
-- Email: Gmail SMTP (via SmtpJS in-browser).
+- Email: Gmail SMTP (via Supabase Edge Function) and EmailJS (frontend-only).
 ### Implemented Frontend Structure
 
 - Routes: `/`, `/auth`, `/dashboard`, `/groups/new`, `/groups/:groupId`, `/groups/:groupId/chat`, `/groups/:groupId/expenses/new`, `/groups/:groupId/expenses/:expenseId`, `/groups/:groupId/settle`, `/join/:token`.
