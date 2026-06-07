@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 
@@ -11,6 +11,19 @@ export const AuthPage = () => {
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Handle error parameters in URL hash (e.g. from expired magic links)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes("error_description")) {
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const description = params.get("error_description");
+      if (description) {
+        setMessage(description.replace(/\+/g, " "));
+        setIsSuccess(false);
+      }
+    }
+  }, []);
 
   const nextPath = ((location.state as { from?: string } | null)?.from ?? "/dashboard") as string;
 
