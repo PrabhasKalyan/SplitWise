@@ -27,10 +27,12 @@ This plan is derived from [AI_CONTEXT.md](/Users/prabhaskalyan/splitwise/AI_CONT
 - Core expense inputs are total amount, who paid, who owes, optional notes, optional receipt, and date overrides.
 - Simplify Debts reduces payment hops without changing each person's total net owed.
 - This project uses a custom admin model for group management and member removal.
+- Implemented frontend-only EmailJS notifications for existing users to bypass backend rate limits.
+- Users must click the confirmation link sent via email to activate their account and login.
 
 ### Workflows Identified
 
-- Auth: sign in with Google or magic link, then land on dashboard.
+- Auth: sign in with Google or magic link, then land on dashboard. Users must click on the confirmation link sent via email to activate their account and login.
 - Group setup: create a group, choose a type, add members by name/email.
 - Group membership: add users to a group, including users who have not yet signed up.
 - Expense entry: multi-payer group expenses with equal, unequal, percentage, or share-based splitting.

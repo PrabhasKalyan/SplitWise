@@ -13,6 +13,7 @@ import {
   Profile,
   SettlementTransfer
 } from "./types";
+import { sendExistingUserNotification } from "./emailjs";
 
 const requireSupabase = () => {
   if (!supabase) {
@@ -82,8 +83,6 @@ export const fetchProfileByEmail = async (email: string) => {
   return data as Profile | null;
 };
 
-import { sendEmail } from "./smtp";
-
 export const sendGroupInvite = async (
   email: string,
   groupName: string,
@@ -91,31 +90,45 @@ export const sendGroupInvite = async (
   joinToken: string,
   isNewUser: boolean
 ) => {
+  const client = requireSupabase();
   const joinUrl = `${window.location.origin}/join/${joinToken}`;
   const authUrl = `${window.location.origin}/auth`;
   
-  const subject = isNewUser 
-    ? `Invitation to join Fairshare` 
-    : `You've been added to ${groupName} on Fairshare`;
+  // Call the Supabase Edge Function
+  try {
+    const { error } = await client.functions.invoke("send-group-invite", {
+      body: {
+        type: "group-invite",
+        email,
+        groupName,
+        inviterName,
+        joinUrl,
+        authUrl,
+        isNewUser
+      }
+    });
 
-  const body = isNewUser
-    ? `Hello,
-       ${inviterName} wants to add you to the group "${groupName}" on Fairshare.
-       You don't have an account on Fairshare yet. Please sign up here: ${authUrl}
-       Once you've signed up, you can join the group here: ${joinUrl}
-       Happy sharing!
-       The Fairshare Team`
-    : `Hello,
-       ${inviterName} has added you to the group "${groupName}" on Fairshare.
-       You can view the group and start tracking expenses here: ${joinUrl}
-       Happy sharing!
-       The Fairshare Team`;
+    if (error) {
+      console.error("Edge Function error:", error);
+    } else {
+      console.log(`Custom SMTP email dispatched via Edge Function to ${email}`);
+    }
+  } catch (err) {
+    console.error("Failed to invoke Edge Function:", err);
+  }
+};
 
-  await sendEmail({
-    to: email,
-    subject,
-    body
-  }).catch(console.error);
+export const sendMagicLink = async (email: string, redirectTo: string) => {
+  const client = requireSupabase();
+  const { error } = await client.functions.invoke("send-group-invite", {
+    body: {
+      type: "magic-link",
+      email,
+      authUrl: redirectTo
+    }
+  });
+
+  if (error) throw error;
 };
 
 export const fetchGroupsForUser = async (userId: string) => {
@@ -283,17 +296,10 @@ export const createGroup = async (user: User, input: CreateGroupInput) => {
 
   // Send invites after successful database insertion
   for (const task of inviteTasks) {
-    void sendGroupInvite(task.email, group.name, creatorName, task.token, task.isNew).catch(console.error);
-    
-    // Trigger secondary Supabase invitation for new users
     if (task.isNew) {
-      console.log("Sending secondary Supabase invitation for", task.email);
-      void client.auth.signInWithOtp({
-        email: task.email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`
-        }
-      }).catch(console.error);
+      void sendGroupInvite(task.email, group.name, creatorName, task.token, true).catch(console.error);
+    } else {
+      void sendExistingUserNotification(task.name, group.name, task.email).catch(console.error);
     }
   }
 
@@ -368,26 +374,25 @@ export const addGroupMember = async (
     throw error;
   }
 
-  // Send custom Gmail SMTP email via browser
-  void sendGroupInvite(
-    input.email, 
-    groupData.data?.name || "a group", 
-    profileData.data?.full_name || "Someone", 
-    data.join_token,
-    !existing
-  ).catch(console.error);
-
-  // Secondary signup path via Supabase (if user is new)
-  if (!existing) {
-    console.log("Sending secondary Supabase invitation for", input.email);
-    void client.auth.signInWithOtp({
-      email: input.email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth`
-      }
-    }).catch(console.error);
+  // Send notifications
+  if (existing) {
+    // For existing users, use the pure frontend EmailJS method as requested
+    void sendExistingUserNotification(
+      input.name || existing.full_name,
+      groupData.data?.name || "a group",
+      input.email
+    ).catch(console.error);
+  } else {
+    // For new users, use the standard invite flow via Edge Function
+    void sendGroupInvite(
+      input.email, 
+      groupData.data?.name || "a group", 
+      profileData.data?.full_name || "Someone", 
+      data.join_token,
+      true
+    ).catch(console.error);
   }
-  
+
   return data as GroupMember;
 };
 

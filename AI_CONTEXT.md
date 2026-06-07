@@ -116,6 +116,7 @@ Reverse engineer Splitwise, scope a realistic 3-day version, and build a working
 
 ### Authentication
 
+- Users must click on the confirmation link sent via email to activate their account and login.
 - Authentication is required.
 - OAuth should be supported.
 - Google auth should be supported.
@@ -124,6 +125,8 @@ Reverse engineer Splitwise, scope a realistic 3-day version, and build a working
 - After login, the user should land on the dashboard.
 - Demo access without signup is not required.
 - Evaluators should be able to self-sign up.
+- Implemented frontend-only EmailJS notifications for existing users to bypass backend rate limits.
+- Users must click the confirmation link sent via email to activate their account and login.
 
 ### Invite Flow
 
